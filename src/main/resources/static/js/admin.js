@@ -63,7 +63,10 @@ let admin = function () {
             if (response.ok) {
                 await response;
             } else {
-                alert("Ошибка HTTP: " + response.status);
+                alert("1)Нельзя создавать пользователей с одинаковыми Email address(ми)"+'\n'+
+                      "2) оставлять поле Email address не заполненным"+ '\n'+
+                      "3) при изменении Email следует обязательно заполнить Password" + '\n'+
+                       "Ошибка HTTP: " + response.status);
             }
 
         },
@@ -81,10 +84,8 @@ let admin = function () {
             } else {
                 alert("Ошибка HTTP: " + response.status);
             }
-
         }
-    }
-};
+    }};
 
 $(function () {
     let api = admin();
@@ -99,7 +100,7 @@ $(function () {
 
         //заполняем вкладку User
         api.getUser().then(user_json => {
-            // roles_text = user_json.roles.forEach(r => r.replaceAll("ROLE_", " "));
+            roles_text = user_json.roles.map(r=>r.name).map(r => r.replaceAll("ROLE_", "")).join(' ');
             // console.alert('roles_text');
             let tr = $('<tr/>')
                 .append($('<td/>').text(user_json.id))
@@ -107,7 +108,7 @@ $(function () {
                 .append($('<td/>').text(user_json.lastName))
                 .append($('<td/>').text(user_json.age))
                 .append($('<td/>').text(user_json.email))
-                .append($('<td/>').append($('<span/>').text(roles_text)));
+                .append($('<td/>').append($('<span/>').text(roles_text)))
             tbody_user.append(tr);
             head_text.text(user_json.email + " with roles: " + roles_text);
         });
@@ -122,7 +123,7 @@ $(function () {
                 user.age = users_json[i].age;
                 user.email = users_json[i].email;
                 user.roles = users_json[i].roles;
-                // roles_text = users_json[i].roles.map(r => r.name).map(r => r.replaceAll("ROLE_", "")).join(' ');
+                roles_text = users_json[i].roles.map(r => r.name).map(r => r.replaceAll("ROLE_", "")).join(' ');
                 // console.log(roles_text);
                 let tr = $('<tr/>')
                     .append($('<td/>').text(users_json[i].id))
@@ -132,7 +133,7 @@ $(function () {
                     .append($('<td/>').text(users_json[i].email))
                     .append($('<td/>').append($('<span/>').text(roles_text)))
                     .append($('<td/>')
-                        .append('<button type="button" class="btn btn-info btn-sm ml-4 mr-2" data-user = ' + JSON.stringify(user) + ' data-toggle="modal" data-target="#updateModal">Edit</button>'))
+                        .append('<button type="button" class="btn btn-info btn-sm ml-4 mr-2" data-user = ' + JSON.stringify(user) + ' data-toggle="modal" data-target="#editModal">Edit</button>'))
                     .append($('<td/>')
                         .append('<button type="button" class="btn btn-danger btn-sm"  data-user = ' + JSON.stringify(user) + '  data-toggle="modal" data-target="#deleteModal">Delete</button>')
                     );
@@ -143,38 +144,36 @@ $(function () {
         //добавляем все возможные роли в селект на закладке нового пользователя, в модальных окнах удаления и редактирования
         api.getAllRoles().then(roles_json => {
 
-            $('#user_roles_new_user').find('option').remove();
-            $('#user_roles_update_modal').find('option').remove();
-            $('#user_roles_delete_modal').find('option').remove();
+            $('#exampleRoleSelect').find('option').remove();
+            $('#exampleRoleSelectDelete').find('option').remove();
+            $('#exampleRoleSelectEdit').find('option').remove();
 
-            let roles = $('#user_roles_new_user');
+            let roles = $('#exampleRoleSelect');
             $.each(roles_json, function (key, value) {
                 roles.append('<option value="' + value.id + '">' + value.name.replaceAll("ROLE_", "") + '</option>');
             });
-            roles = $('#user_roles_delete_modal');
+            roles = $('#exampleRoleSelectDelete');
             $.each(roles_json, function (key, value) {
                 roles.append('<option value="' + value.id + '">' + value.name.replaceAll("ROLE_", "") + '</option>');
             });
-            roles = $('#user_roles_update_modal');
+            roles = $('#exampleRoleSelectEdit');
             $.each(roles_json, function (key, value) {
                 roles.append('<option value="' + value.id + '">' + value.name.replaceAll("ROLE_", "") + '</option>');
             });
         })
-
-    }
-
-    //собираем нового пользователя и отправляем запрос на его создание кликом по кнопке с id= "button_new_user"
-    $('#button_new_user').click(function () {
+   }
+    //собираем нового пользователя и отправляем запрос на его создание кликом по кнопке с id= "btn_new_user"
+    $('#btn_new_user').click(function () {
         let new_user = new User();
 
-        // заполняем нового пользователя данными (у всех полей ввода на вкладке с id="newuser" атрибут class="form-control"
-        $('#newuser .form-control').each(function (index, element) {
+        // заполняем нового пользователя данными (у всех полей ввода на вкладке с id="nav_newuser" атрибут class="form-control"
+        $('#nav_newuser .form-control').each(function (index, element) {
             new_user[element.name] = element.value;
         });
         new_user.id = 0;//поскольку новый , то id=0
 
         //получаем массив выбранных ролей и добавляем их новому пользователю
-        let userRolesSelect = $('#user_roles_new_user');
+        let userRolesSelect = $('#exampleRoleSelect');
         let selected_roles = userRolesSelect.find('option:selected').map(function () {
             let role = new Role();
             role.id = $(this).val();
@@ -186,26 +185,25 @@ $(function () {
         //очищаем поля input  и селектора ролей
         //отправляем нового пользователя и обновляем таблицу пользователей
         api.saveUser(new_user).then(r => {
-            $('#newuser').find('input').val('');
-            $('#user_roles_new_user').find('option').remove();
+            $('#nav_newuser').find('input[type="text"],input[type="password"],input[type="number"],input[type="email"]').val('');
+            $('#exampleRoleSelect').find('option').remove();
+            $('.tab-pane [href="#nav-home"]').tab('show');
             updateUsers();
-            $('.nav-tabs a[href="#users"]').tab('show');
         });
 
     });
 
-
     //заполняем данные после отрисовки модального окна редактирования пользователя
-    $('#updateModal').on('shown.bs.modal', function (e) {
+    $('#editModal').on('shown.bs.modal', function (e) {
         let user = JSON.parse(e.relatedTarget.dataset.user);
         user.password = '';
         let roles = user.roles;
-        $('#updateModal .form-control').each(function (index, element) {
+        $('#editModal .form-control').each(function (index, element) {
             element.value = user[element.name];
         });
         //заполняем текущие роли пользователя
         for (let i = 0; i < roles.length; i++) {
-            $('#user_roles_update_modal option[value = ' + roles[i].id + ']').prop('selected', true);
+            $('#exampleRoleSelectEdit option[value = ' + roles[i].id + ']').prop('selected', true);
         }
 
     })
@@ -221,7 +219,7 @@ $(function () {
         });
         //заполняем текущие роли пользователя
         for (let i = 0; i < roles.length; i++) {
-            $('#user_roles_delete_modal option[value = ' + roles[i].id + ']').prop('selected', true);
+            $('#exampleRoleSelectDelete option[value = ' + roles[i].id + ']').prop('selected', true);
         }
     })
 
@@ -229,12 +227,12 @@ $(function () {
         let new_user = new User();
 
         // заполняем нового пользователя данными (у всех полей ввода на вкладке с id="newuser" атрибут class="form-control"
-        $('#updateModal .form-control').each(function (index, element) {
+        $('#editModal .form-control').each(function (index, element) {
             new_user[element.name] = element.value;
         });
          console.log(new_user);
         //получаем массив выбранных ролей и добавляем их новому пользователю
-        let userRolesSelect = $('#user_roles_update_modal');
+        let userRolesSelect = $('#exampleRoleSelectEdit');
         let selected_roles = userRolesSelect.find('option:selected').map(function () {
             let role = new Role();
             role.id = $(this).val();
@@ -246,15 +244,16 @@ $(function () {
         //очищаем поля input  и селектора ролей
         //отправляем нового пользователя и обновляем таблицу пользователей
         api.saveUser(new_user).then(r => {
-            $('#updateModal').find('input').val('');
-            $('#user_roles_update_modal').find('option').remove();
-            $("#updateModal").modal('hide');
-            updateUsers();
+            $('#editModal').find('input').val('');
+            $('#exampleRoleSelectEdit').find('option').remove();
+            $("#editModal").modal('hide');
             $('.nav-tabs a[href="#users"]').tab('show');
+            updateUsers();
+
         });
     });
 
-    $('#button_delete_user').click(function () {
+    $('#btn_delete_user').click(function () {
         let new_user = new User();
 
         // заполняем нового пользователя данными (у всех полей ввода на вкладке с id="newuser" атрибут class="form-control"
@@ -263,7 +262,7 @@ $(function () {
         });
         console.log(new_user);
         //получаем массив выбранных ролей и добавляем их новому пользователю
-        let userRolesSelect = $('#user_roles_delete_modal');
+        let userRolesSelect = $('#exampleRoleSelectDelete');
         let selected_roles = userRolesSelect.find('option:selected').map(function () {
             let role = new Role();
             role.id = $(this).val();
@@ -276,7 +275,7 @@ $(function () {
         //отправляем нового пользователя и обновляем таблицу пользователей
         api.deleteUser(new_user).then(r => {
             $('#deleteModal').find('input').val('');
-            $('#user_roles_delete_modal').find('option').remove();
+            $('#exampleRoleSelectDelete').find('option').remove();
             $("#deleteModal").modal('hide');
             updateUsers();
             $('.nav-tabs a[href="#users"]').tab('show');

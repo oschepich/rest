@@ -15,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -26,11 +25,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
     @Autowired
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
     }
+
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 
@@ -44,22 +45,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public void saveUser(User user) {
 
-        if (!user.getEmail().equals(userRepository.findUserByEmail(user.getEmail()))){
+        if (!user.getEmail().equals(userRepository.findUserByEmail(user.getEmail()))) {
             if (user.getPassword().equals("")) {
                 user.setPassword(userRepository.findUserByEmail(user.getEmail()).getPassword());
             } else {
                 user.setPassword(passwordEncoder.encode(user.getPassword()));
             }
-        userRepository.save(user);
+            userRepository.save(user);
         }
-   }
+    }
 
     //  метод нахождения одного user-а в списке
     @Override
     public User show(Long id) {
         User user = null;
-        Optional <User> optional=userRepository.findById(id);
-        if (optional.isPresent()){
+        Optional<User> optional = userRepository.findById(id);
+        if (optional.isPresent()) {
             user = optional.get();
         }
         return user;
@@ -67,9 +68,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     //  метод удаления одного user-а из списка
     @Override
-    public User deleteUser(Long id) {
+    public void deleteUser(Long id) {
         userRepository.deleteById(id);
-        return null;
     }
 
     @Override
@@ -98,8 +98,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
         return new org.springframework.security.core.userdetails.User(email, user.getPassword(), grantedAuthorities);
     }
+
     @Override
-    public User getUserByEmail(String email){
+    public User getUserByEmail(String email) {
         return userRepository.findUserByEmail(email);
     }
 }

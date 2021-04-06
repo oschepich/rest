@@ -45,7 +45,9 @@ public class User implements UserDetails {
             addRole(role);
         };
     }
-
+    public Set<Role> getRolesFromJson() {
+        return roles;
+    }
 
     public User() {
     }

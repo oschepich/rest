@@ -14,7 +14,7 @@ public interface UserService<T>{
 
     T show(Long id);
 
-     User deleteUser(Long id);
+     void deleteUser(Long id);
 
     Role getRole(String name);
 

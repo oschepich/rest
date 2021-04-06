@@ -24,16 +24,18 @@ public class AdminRestController {
         List<User> allUser = userService.getAllUser();
         return ResponseEntity.ok(allUser);
     }
+
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getAllRoles() {
         List<Role> allRole = userService.getListRole();
         return ResponseEntity.ok(allRole);
     }
+
     //создаю нового пользователя
     @PostMapping("/add")
     public ResponseEntity<User> addUser(@RequestBody User user) {
-            userService.saveUser(user);
-            return ResponseEntity.ok().build();
+        userService.saveUser(user);
+        return ResponseEntity.ok().build();
     }
 
     //вывод одного юсера
@@ -51,11 +53,10 @@ public class AdminRestController {
     }
 
     //удаляю пользователя
-    @PostMapping("/delete/{id}")
-    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
-       User user = userService.deleteUser(id);
-        return ResponseEntity.ok(user);
+    @PostMapping("/delete")
+    public ResponseEntity<User> deleteUser(@RequestBody User user) {
+        userService.deleteUser(user.getId());
+        return ResponseEntity.ok().build();
     }
-
 
 }
